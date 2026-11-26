@@ -10,17 +10,20 @@ Fixtures:
 Hooks:
   - pytest_runtest_makereport: si un test de UI falla, guarda una captura con nombre del test
     y fecha/hora, y la adjunta al reporte HTML.
+  - pytest_html_*: personalizan el reporte HTML (título, entorno y columna "Descripción").
 """
+import html
 import logging
 
 import pytest
 from pytest_html import extras as html_extras
+from pytest_metadata.plugin import metadata_key
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
 from pages.inventory_page import InventoryPage
 from pages.login_page import LoginPage
-from utils.config import CARPETA_SCREENSHOTS, CHROMEDRIVER_PATH, HEADLESS
+from utils.config import API_URL_BASE, CARPETA_SCREENSHOTS, CHROMEDRIVER_PATH, HEADLESS, URL_BASE
 from utils.helpers import marca_de_tiempo, nombre_archivo_seguro
 from utils.lector_datos import cargar_usuario
 
@@ -88,6 +91,9 @@ def pytest_runtest_makereport(item, call):
     """Si un test de UI falla, guarda una captura y la adjunta al reporte HTML."""
     reporte = yield  # Pytest ejecuta la fase y nos devuelve su resultado
 
+    # El docstring del test se muestra como "Descripción" en el reporte HTML
+    reporte.descripcion = (item.function.__doc__ or "").strip()
+
     # 'setup' cubre fallos en fixtures (ej. login), 'call' cubre fallos dentro del test
     if reporte.when in ("setup", "call") and reporte.failed:
         navegador = item.funcargs.get("driver")
@@ -104,3 +110,27 @@ def pytest_runtest_makereport(item, call):
             reporte.extras = adjuntos
 
     return reporte
+
+
+# ---------------------------------------------------------------------------
+# Personalización del reporte HTML
+# ---------------------------------------------------------------------------
+def pytest_configure(config):
+    """Agrega datos del entorno de prueba a la sección 'Environment' del reporte."""
+    metadatos = config.stash[metadata_key]
+    metadatos["Proyecto"] = "Framework de Automatización de Pruebas - Rafael Pérez"
+    metadatos["Sitio UI"] = URL_BASE
+    metadatos["API"] = API_URL_BASE
+    metadatos["Navegador"] = "Chrome (headless)" if HEADLESS else "Chrome"
+
+
+def pytest_html_report_title(report):
+    report.title = "Reporte de pruebas automatizadas - UI (Selenium) y API (Requests)"
+
+
+def pytest_html_results_table_header(cells):
+    cells.insert(2, "<th>Descripción</th>")
+
+
+def pytest_html_results_table_row(report, cells):
+    cells.insert(2, f"<td>{html.escape(getattr(report, 'descripcion', ''))}</td>")
