@@ -1,0 +1,4 @@
+caso,nombre,apellido,codigo_postal,mensaje_esperado
+sin_nombre,,Perez,1406,First Name is required
+sin_apellido,Rafael,,1406,Last Name is required
+sin_codigo_postal,Rafael,Perez,,Postal Code is required
