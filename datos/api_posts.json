@@ -1,0 +1,20 @@
+{
+  "posts_existentes": [
+    { "id": 1,   "userId": 1 },
+    { "id": 50,  "userId": 5 },
+    { "id": 100, "userId": 10 }
+  ],
+  "ids_inexistentes": [0, 101, 9999],
+  "usuario_para_filtrar": 1,
+  "nuevo_post": {
+    "title": "Framework de automatización",
+    "body": "Post creado desde Pytest + Requests",
+    "userId": 1
+  },
+  "post_actualizado": {
+    "id": 1,
+    "title": "Título actualizado por el test",
+    "body": "Contenido actualizado con PUT",
+    "userId": 1
+  }
+}
