@@ -1,39 +1,24 @@
 """
 utils/helpers.py
-Funciones auxiliares reutilizables por todos los tests de saucedemo.com
+Funciones auxiliares genéricas, independientes de cualquier página o test.
 """
-import logging
-
-import json
-from pathlib import Path
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
-logger = logging.getLogger(__name__)
-
-URL_BASE = "https://www.saucedemo.com/"
-TIEMPO_ESPERA = 10  # segundos máximos para las esperas explícitas
-
-# Ruta al JSON construida desde la ubicación de este archivo,
-# así funciona sin importar desde qué carpeta se ejecute pytest.
-RUTA_USUARIOS = Path(__file__).parent.parent / "datos" / "usuarios.json"
+import re
+from datetime import datetime
 
 
-def cargar_usuario(tipo):
-    """Devuelve (usuario, password) del tipo indicado en datos/usuarios.json."""
-    with open(RUTA_USUARIOS, encoding="utf-8") as archivo:
-        usuarios = json.load(archivo)
-    return usuarios[tipo]["usuario"], usuarios[tipo]["password"]
+def convertir_precio(texto):
+    """Convierte un texto con precio (ej. 'Item total: $29.99') en un número decimal (29.99)."""
+    coincidencia = re.search(r"\d+(?:\.\d+)?", texto)
+    if coincidencia is None:
+        raise ValueError(f"No se encontró un precio en el texto: '{texto}'")
+    return float(coincidencia.group())
 
 
-def login(driver, usuario, password):
-    """Abre saucedemo.com e inicia sesión con las credenciales recibidas."""
-    logger.info(f"Iniciando sesión con el usuario: {usuario}")
-    driver.get(URL_BASE)
-    espera = WebDriverWait(driver, TIEMPO_ESPERA)
-    # Esperamos a que el campo usuario sea visible antes de escribir
-    espera.until(EC.visibility_of_element_located((By.ID,"user-name"))).send_keys(usuario)
-    driver.find_element(By.ID,"password").send_keys(password)
-    driver.find_element(By.ID,"login-button").click()
+def nombre_archivo_seguro(texto):
+    """Reemplaza caracteres no válidos para nombres de archivo (ej. los corchetes de tests parametrizados)."""
+    return re.sub(r"[^\w\-]+", "_", texto).strip("_")
+
+
+def marca_de_tiempo():
+    """Devuelve la fecha y hora actual en formato AAAAMMDD_HHMMSS, ideal para nombres de archivo."""
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
